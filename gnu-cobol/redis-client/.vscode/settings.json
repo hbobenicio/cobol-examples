@@ -1,0 +1,27 @@
+{
+    "files.associations": {
+        "*.COBOL*": "cobol",
+        "*.COB*": "cobol",
+        "*.COBCOPY*": "cobol",
+        "*.COPYBOOK*": "cobol",
+        "*.COPY*": "cobol",
+        "*.PL1*": "pl1",
+        "*.PLI*": "pl1",
+        "*.INC*": "pl1",
+        "*.INCLUDE*": "pl1",
+        "*.JCL*": "jcl",
+        "*.ASM*": "hlasm",
+        "*.ASSEMBLE*": "hlasm",
+        "*.HLASM*": "hlasm",
+        "*.HLA*": "hlasm",
+        "*.tcc": "c",
+        "exception": "c",
+        "memory_resource": "c",
+        "fstream": "c",
+        "iosfwd": "c",
+        "new": "c",
+        "ostream": "c",
+        "sstream": "c",
+        "streambuf": "c"
+    }
+}

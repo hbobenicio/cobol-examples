@@ -4,7 +4,7 @@ SRCDIR = ./src
 
 COBC="$(HOME)/bin/gnucobol/gnucobol-3.1-rc1/bin/cobc"
 
-CFLAGS = -Wall -g -DDEBUG -I $(SRCDIR)
+CFLAGS = -Wall -g -DDEBUG -std=c11 -I $(SRCDIR)
 COB_CFLAGS = -Wall -fixed -std=default -g -debug
 
 OBJ = $(BUILDDIR)/ffi/posix.o $(BUILDDIR)/redis-client.o

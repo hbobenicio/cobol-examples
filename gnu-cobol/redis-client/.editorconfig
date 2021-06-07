@@ -1,0 +1,7 @@
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*.{c,cpp,cc,h,hpp,cob,cbl}]
+charset = utf-8
+insert_final_newline = true
