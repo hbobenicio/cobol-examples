@@ -2,6 +2,8 @@ BUILDDIR = ./build
 BINDIR = ./bin
 SRCDIR = ./src
 
+COBC="$(HOME)/bin/gnucobol/gnucobol-3.1-rc1/bin/cobc"
+
 CFLAGS = -Wall -g -DDEBUG -I $(SRCDIR)
 COB_CFLAGS = -Wall -fixed -std=default -g -debug
 
