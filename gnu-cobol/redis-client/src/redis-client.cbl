@@ -48,7 +48,7 @@
                  'PING' DELIMITED BY 4
                  x'0D'  DELIMITED BY 1
                  x'0A'  DELIMITED BY 1
-                 X'00'  DELIMITED BY 1
+      *           X'00'  DELIMITED BY 1
              INTO COMMAND IN REDIS.
            DISPLAY 'COMMAND="', COMMAND IN REDIS , '"'.
            PERFORM FFI-POSIX-SEND.
@@ -88,20 +88,22 @@
 
        FFI-POSIX-SEND.
       * TODO is it write or send?
-           CALL 'send' USING
+           CALL 'ffi_posix_send' USING
                BY VALUE SOCK IN REDIS
                BY CONTENT COMMAND IN REDIS
-               BY VALUE 5
+               BY VALUE 6
                RETURNING RC
            END-CALL.
            IF RC IS EQUAL TO -1 THEN
                CALL 'ffi_posix_errno' RETURNING ERRNO IN POSIX
-               DISPLAY 'error: write failed. errno=', ERRNO
+               DISPLAY 'error: send failed. errno=', ERRNO
                MOVE ERRNO TO RETURN-CODE
                PERFORM FFI-POSIX-CLOSE
                STOP RUN
            END-IF.
-           DISPLAY RC.
+           DISPLAY '[DEBUG] PING success. rc=', RC
+                 , '(bytes sent)'
+                 .
            CALL 'recv' USING
                BY VALUE SOCK IN REDIS
                BY REFERENCE RESP IN REDIS
@@ -115,7 +117,7 @@
                MOVE ERRNO TO RETURN-CODE
                STOP RUN
            END-IF.
-           DISPLAY RC.
+           DISPLAY '[DEBUG] recv RC=', RC, ' RESP=', RESP IN REDIS .
 
        FFI-POSIX-CLOSE.
            CALL 'close' USING
