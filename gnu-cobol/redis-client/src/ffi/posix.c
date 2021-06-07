@@ -29,11 +29,11 @@ int ffi_posix_sock_stream() {
     return SOCK_STREAM;
 }
 
-int ffi_posix_connect(int sock, const char* host, size_t host_len, uint16_t port) {
+int ffi_posix_connect(int sockfd, const char* host, size_t host_len, uint16_t port) {
     char* const null_terminated_host = new_str_from_buf(host, host_len);
 
 #ifdef DEBUG
-    fprintf(stderr, "[DEBUG] ffi: socket(%d, \"%s\", %hu)\n", sock, null_terminated_host, port);
+    fprintf(stderr, "[DEBUG] ffi: socket(%d, \"%s\", %hu)\n", sockfd, null_terminated_host, port);
 #endif
 
     struct sockaddr_in addr = {0};
@@ -41,7 +41,7 @@ int ffi_posix_connect(int sock, const char* host, size_t host_len, uint16_t port
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = inet_addr(null_terminated_host);
     
-    int rc = connect(sock, (struct sockaddr*)&addr, sizeof(addr));
+    int rc = connect(sockfd, (struct sockaddr*)&addr, sizeof(addr));
     if (rc == -1) {
         int error_code = errno;
         const char* error_msg = strerror(error_code);
@@ -52,21 +52,40 @@ int ffi_posix_connect(int sock, const char* host, size_t host_len, uint16_t port
     return rc;
 }
 
-int ffi_posix_send(int fd, const char* buf, size_t buf_len) {
+ssize_t ffi_posix_send(int sockfd, const char* buf, size_t buf_len) {
 #ifdef DEBUG
-    fprintf(stderr, "[DEBUG] ffi: send(%d,", fd);
+    fprintf(stderr, "[DEBUG] ffi: send(%d,", sockfd);
     for (size_t i = 0; i < buf_len; i++) {
         fprintf(stderr, " %02X", buf[i]);
     }
     fprintf(stderr, ", %zu, 0)\n", buf_len);
 #endif
 
-    ssize_t rc = send(fd, buf, buf_len, 0);
+    ssize_t rc = send(sockfd, buf, buf_len, 0);
     if (rc == -1) {
         int error_code = errno;
         const char* error_msg = strerror(error_code);
-        fprintf(stderr, "[ERROR] ffi: write: [%d] %s\n", error_code, error_msg);
+        fprintf(stderr, "[ERROR] ffi: send: [%d] %s\n", error_code, error_msg);
     }
+
+    return rc;
+}
+
+ssize_t ffi_posix_recv(int sockfd, char *buf, size_t buf_len) {
+#ifdef DEBUG
+    fprintf(stderr, "[DEBUG] ffi: recv(%d, out buf, %zu, 0)\n", sockfd, buf_len);
+#endif
+
+    ssize_t rc = recv(sockfd, buf, buf_len, 0);
+    if (rc == -1) {
+        int error_code = errno;
+        const char* error_msg = strerror(error_code);
+        fprintf(stderr, "[ERROR] ffi: recv: [%d] %s\n", error_code, error_msg);
+    }
+
+#ifdef DEBUG
+    fprintf(stderr, "[DEBUG] ffi: recv ok. rc=%zd(bytes received) buf=\"%s\"\n", rc, buf);
+#endif
 
     return rc;
 }

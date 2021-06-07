@@ -11,8 +11,8 @@
          02  HOST-LEN    PIC 9(2)   VALUE 9.
          02  PORT        PIC 9(4)   BINARY VALUE 6379.
          02  SOCK        PIC S9(8)  BINARY VALUE ZEROES.
-         02  COMMAND     PIC X(100) VALUE SPACES.
-         02  RESP        PIC X(100) VALUE SPACES.
+         02  COMMAND     PIC X(100) VALUE ' '.
+         02  RESP        PIC X(100) VALUE ' '.
        01  POSIX.
          02  ERRNO       PIC S9(8)  BINARY.
          02  STRERROR    PIC X(50)  VALUE SPACES.
@@ -23,9 +23,12 @@
        PROCEDURE DIVISION.
            PERFORM FFI-POSIX-INIT.
            PERFORM REDIS-CONNECT.
+           PERFORM REDIS-PING.
            STOP RUN.
 
       * Initializes the FFI for Posix stuff
+      * TODO test to define it like this
+      * 01 EXT-ITEM1          PIC 99 EXTERNAL.
        FFI-POSIX-INIT.
            CALL 'ffi_posix_af_inet'     RETURNING AF-INET     IN POSIX.
            CALL 'ffi_posix_sock_stream' RETURNING SOCK-STREAM IN POSIX.
@@ -44,15 +47,16 @@
            PERFORM FFI-POSIX-CONNECT.
            DISPLAY '[INFO] Successfully connected. fd=', SOCK IN REDIS.
 
-           STRING
-                 'PING' DELIMITED BY 4
-                 x'0D'  DELIMITED BY 1
-                 x'0A'  DELIMITED BY 1
-      *           X'00'  DELIMITED BY 1
+       REDIS-PING.
+           DISPLAY '[INFO] redis: Sending PING command'
+           STRING 'PING' DELIMITED BY 4
+                  x'0D'  DELIMITED BY 1
+                  x'0A'  DELIMITED BY 1
              INTO COMMAND IN REDIS.
-           DISPLAY 'COMMAND="', COMMAND IN REDIS , '"'.
            PERFORM FFI-POSIX-SEND.
-
+           PERFORM FFI-POSIX-RECV.
+           DISPLAY '[INFO] redis: Ping success. resp=TODO'.
+       
        FFI-POSIX-SOCKET.
            CALL 'socket' USING
                BY VALUE AF-INET IN POSIX 
@@ -87,7 +91,6 @@
            END-IF.
 
        FFI-POSIX-SEND.
-      * TODO is it write or send?
            CALL 'ffi_posix_send' USING
                BY VALUE SOCK IN REDIS
                BY CONTENT COMMAND IN REDIS
@@ -101,23 +104,32 @@
                PERFORM FFI-POSIX-CLOSE
                STOP RUN
            END-IF.
-           DISPLAY '[DEBUG] PING success. rc=', RC
+           DISPLAY '[DEBUG] send success. rc=', RC
                  , '(bytes sent)'
                  .
-           CALL 'recv' USING
+
+       FFI-POSIX-RECV.
+           DISPLAY '[DEBUG] recv: reading response...'
+           CALL 'ffi_posix_recv' USING
                BY VALUE SOCK IN REDIS
-               BY REFERENCE RESP IN REDIS
-               BY VALUE 6
-               BY VALUE 0
+               BY REFERENCE ADDRESS OF RESP IN REDIS
+               BY VALUE LENGTH OF RESP IN REDIS
                RETURNING RC
            END-CALL.
+           DISPLAY '[DEBUG] recv:'
+                 , ' rc=', RC
+                 , ' resp=', RESP IN REDIS
+                 .
            IF RC IS EQUAL TO -1 THEN
                CALL 'ffi_posix_errno' RETURNING ERRNO IN POSIX
                DISPLAY 'error: recv failed. errno=', ERRNO
                MOVE ERRNO TO RETURN-CODE
                STOP RUN
            END-IF.
-           DISPLAY '[DEBUG] recv RC=', RC, ' RESP=', RESP IN REDIS .
+           DISPLAY '[DEBUG] recv success.'
+                 , ' rc=', RC
+                 , ' resp=', RESP IN REDIS
+                 .
 
        FFI-POSIX-CLOSE.
            CALL 'close' USING
